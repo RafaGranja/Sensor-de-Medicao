@@ -10,7 +10,7 @@ clean:
 	rm -f bin/server bin/client
 
 run-server:
-	bin/server
+	bin/server v4 51511
 run-client-temperatura:
 	bin/client 127.0.0.1 51511 -type temperature -coords 2 3
 run-client-umidade:
