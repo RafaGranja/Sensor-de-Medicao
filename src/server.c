@@ -35,7 +35,7 @@ int client_count = 0;
 pthread_mutex_t client_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 /* Funções auxiliares */
-void broadcast_message(sensor_message msg, const char* type);
+void broadcast_message(sensor_message msg, const char* type, int sender_socket);
 float calculate_distance(int x1, int y1, int x2, int y2);
 
 float calculate_distance(int x1, int y1, int x2, int y2) {
@@ -73,8 +73,8 @@ void* handle_client(void* arg) {
         // Log no servidor
         printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\n\n", msg.type, msg.coords[0], msg.coords[1], msg.measurement);
 
-        // Envia mensagem para outros sensores do mesmo tipo
-        broadcast_message(msg, msg.type);
+        // Envia mensagem para outros sensores do mesmo tipo, excluindo o remetente
+        broadcast_message(msg, msg.type, client_socket);
 
         pthread_mutex_unlock(&client_mutex);
     }
@@ -90,7 +90,7 @@ void* handle_client(void* arg) {
             removal_msg.coords[1] = clients[i].coords[1];
             removal_msg.measurement = -1.0000;
 
-            broadcast_message(removal_msg, clients[i].type);
+            broadcast_message(removal_msg, clients[i].type, client_socket);
 
             printf("log:\n%s sensor in (%d,%d)\nmeasurement: -1.0000\n\n", clients[i].type, clients[i].coords[0], clients[i].coords[1]);
 
@@ -106,10 +106,10 @@ void* handle_client(void* arg) {
     pthread_exit(NULL);
 }
 
-/* Função para enviar mensagem para outros clientes do mesmo tipo */
-void broadcast_message(sensor_message msg, const char* type) {
+/* Função para enviar mensagem para outros clientes do mesmo tipo, exceto o remetente */
+void broadcast_message(sensor_message msg, const char* type, int sender_socket) {
     for (int i = 0; i < client_count; i++) {
-        if (strcmp(clients[i].type, type) == 0 && clients[i].socket != -1) {
+        if (strcmp(clients[i].type, type) == 0 && clients[i].socket != sender_socket) {
             send(clients[i].socket, &msg, sizeof(msg), 0);
         }
     }
