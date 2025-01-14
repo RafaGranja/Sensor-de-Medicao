@@ -118,8 +118,25 @@ int main(int argc, char* argv[]) {
         // Recebe mensagens do servidor
         sensor_message incoming_msg;
         while (recv(client_socket, &incoming_msg, sizeof(incoming_msg), 0) > 0) {
-            printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\n\n",
-                   incoming_msg.type, incoming_msg.coords[0], incoming_msg.coords[1], incoming_msg.measurement);
+            const char* action;
+
+            // Verifica a ação a ser tomada
+            if (incoming_msg.coords[0] == coords[0] && incoming_msg.coords[1] == coords[1]) {
+                action = "same location";
+            } else {
+                float distance = sqrt(pow(incoming_msg.coords[0] - coords[0], 2) + pow(incoming_msg.coords[1] - coords[1], 2));
+
+                if (distance > 3) {
+                    action = "not neighbor";
+                } else {
+                    float correction = 0.1 * (1 / (distance + 1)) * (incoming_msg.measurement - msg.measurement);
+                    msg.measurement += correction;
+                    action = "correction applied";
+                }
+            }
+
+            printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\naction: %s\n\n",
+                   incoming_msg.type, incoming_msg.coords[0], incoming_msg.coords[1], incoming_msg.measurement, action);
         }
 
         // Atualiza medição (aleatória para demonstração)
