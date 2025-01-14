@@ -74,26 +74,7 @@ void* handle_client(void* arg) {
         printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\n\n", msg.type, msg.coords[0], msg.coords[1], msg.measurement);
 
         // Envia mensagem para outros sensores do mesmo tipo
-        for (int i = 0; i < client_count; i++) {
-            if (strcmp(clients[i].type, msg.type) == 0 && clients[i].socket != client_socket) {
-                float distance = calculate_distance(clients[i].coords[0], clients[i].coords[1], msg.coords[0], msg.coords[1]);
-                const char* action;
-
-                if (distance == 0) {
-                    action = "same location";
-                } else if (distance > MAX_NEIGHBORS) {
-                    action = "not neighbor";
-                } else {
-                    float correction = 0.1 * (1 / (distance + 1)) * (msg.measurement - clients[i].measurement);
-                    clients[i].measurement += correction;
-                    action = "correction applied";
-                }
-
-                printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\naction: %s\n\n", msg.type, clients[i].coords[0], clients[i].coords[1], clients[i].measurement, action);
-
-                send(clients[i].socket, &msg, sizeof(msg), 0);
-            }
-        }
+        broadcast_message(msg, msg.type);
 
         pthread_mutex_unlock(&client_mutex);
     }
@@ -102,6 +83,15 @@ void* handle_client(void* arg) {
     pthread_mutex_lock(&client_mutex);
     for (int i = 0; i < client_count; i++) {
         if (clients[i].socket == client_socket) {
+            // Envia mensagem de remoção para os outros sensores do mesmo tipo
+            sensor_message removal_msg;
+            strcpy(removal_msg.type, clients[i].type);
+            removal_msg.coords[0] = clients[i].coords[0];
+            removal_msg.coords[1] = clients[i].coords[1];
+            removal_msg.measurement = -1.0000;
+
+            broadcast_message(removal_msg, clients[i].type);
+
             printf("log:\n%s sensor in (%d,%d)\nmeasurement: -1.0000\n\n", clients[i].type, clients[i].coords[0], clients[i].coords[1]);
 
             // Remove cliente
@@ -114,6 +104,15 @@ void* handle_client(void* arg) {
 
     close(client_socket);
     pthread_exit(NULL);
+}
+
+/* Função para enviar mensagem para outros clientes do mesmo tipo */
+void broadcast_message(sensor_message msg, const char* type) {
+    for (int i = 0; i < client_count; i++) {
+        if (strcmp(clients[i].type, type) == 0 && clients[i].socket != -1) {
+            send(clients[i].socket, &msg, sizeof(msg), 0);
+        }
+    }
 }
 
 /* Função principal do servidor */

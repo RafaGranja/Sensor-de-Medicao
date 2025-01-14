@@ -121,7 +121,9 @@ int main(int argc, char* argv[]) {
             const char* action;
 
             // Verifica a ação a ser tomada
-            if (incoming_msg.coords[0] == coords[0] && incoming_msg.coords[1] == coords[1]) {
+            if (incoming_msg.measurement < 0) {
+                action = "removed";
+            } else if (incoming_msg.coords[0] == coords[0] && incoming_msg.coords[1] == coords[1]) {
                 action = "same location";
             } else {
                 float distance = sqrt(pow(incoming_msg.coords[0] - coords[0], 2) + pow(incoming_msg.coords[1] - coords[1], 2));
