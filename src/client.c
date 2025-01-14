@@ -113,7 +113,7 @@ int main(int argc, char* argv[]) {
             break;
         }
 
-        printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\n\n", msg.type, msg.coords[0], msg.coords[1], msg.measurement);
+        printf("log:\n%s sensor in (%d,%d)\nmeasurement: %.4f\naction: %s\n\n", msg.type, msg.coords[0], msg.coords[1], msg.measurement,"same location");
 
         // Recebe mensagens do servidor
         sensor_message incoming_msg;
