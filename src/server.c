@@ -182,8 +182,6 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    printf("Servidor iniciado na porta %d usando %s\n", porta, ipv6 ? "IPv6" : "IPv4");
-
     while (1)
     {
         struct sockaddr_storage clienteEndereco;

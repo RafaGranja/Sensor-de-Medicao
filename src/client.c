@@ -119,8 +119,7 @@ int main(int argc, char *argv[])
         return EXIT_FAILURE;
     }
 
-    printf("Cliente conectado ao servidor %s:%d\n", server_ip, port);
-
+    // semente baseada no tempo
     srand(time(NULL));
     sensor_message msg;
     strcpy(msg.type, type);
